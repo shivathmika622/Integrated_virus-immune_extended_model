@@ -130,7 +130,6 @@ k69            = Param(126); % 5.05e-04 units = 1/(molecules.min)
 degRecBySOCS     = Param(127);
 degARCBySOCS     = Param(128);
 kinhBySOCS       = Param(129);
-M                = Param(130);
 
 % Define species 
 
@@ -215,10 +214,6 @@ IRF9_mRNA_c = y(75);
 % Viral lifecycle                                                        
    
 f_CM   = 1 - exp(-(t/tau)^4);
- 
-k_r_eff = k_r * (M/(M + P_NS ));
-
-k_t_eff = k_t * (M/(M + P_NS));
 
 RC_form_rate = (k_c) * R_cyt * P_NS *( (f_CM) - ( RC_CM/rcsat ));
     
@@ -230,11 +225,11 @@ dV_I    =  (k_en/(1 + I_a*ISGav))*V_0 - (k_f/(1 + I_a*ISGav))*V_I - mu_V_I*V_I;
 
 dR_cyt    =  (k_e)*R_CM - (k_a/(1 + I_a*ISGav))*P_S*R_cyt - mu_r*(1 + (I_a*ISGav))*R_cyt - RC_form_rate + (k_f/(1 + I_a*ISGav))*V_I;
 
-dR_CM    =  (k_r_eff/(1 + I_a*ISGav))*RC_CM  - (k_e)*R_CM;
+dR_CM    =  (k_r/(1 + I_a*ISGav))*RC_CM  - (k_e)*R_CM;
 
-dP_S    =  (k_t_eff/(1 + I_a*ISGav))*R_cyt - (k_a/(1 + I_a*ISGav))*nSP*P_S*R_cyt - mu_p*(1 + (I_a*ISGav))*P_S;
+dP_S    =  (k_t/(1 + I_a*ISGav))*R_cyt - (k_a/(1 + I_a*ISGav))*nSP*P_S*R_cyt - mu_p*(1 + (I_a*ISGav))*P_S;
 
-dP_NS    =  (k_t_eff/(1 + I_a*ISGav))*R_cyt - RC_form_rate - mu_p*(1 + (I_a*ISGav))*P_NS;
+dP_NS    =  (k_t/(1 + I_a*ISGav))*R_cyt - RC_form_rate - mu_p*(1 + (I_a*ISGav))*P_NS;
 
 dRC_CM    =  RC_form_rate - a_RC*RC_CM;
 
