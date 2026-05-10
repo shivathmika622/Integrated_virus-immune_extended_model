@@ -22,7 +22,7 @@ y0 = Yss(end,:);
 y0(2) = 1; % Start infection
 
 %% Simulation settings
-I_n = 1; I_a = 1; VC = 1;
+I_n = 1; I_a = 1; VC = 0.16;
 tend = 96*60;
 tspan = linspace(0,tend,1000);
 
