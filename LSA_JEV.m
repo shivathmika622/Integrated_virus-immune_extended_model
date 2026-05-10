@@ -32,7 +32,7 @@ y0(2) = 1;   % Start infection
 %% 5. Simulation settings
 I_n = 1;
 I_a = 1;
-VC   = 1;
+VC   = 0.16;
 
 tend  = 96 * 60;
 tspan = linspace(0, tend, 1000);
@@ -100,13 +100,25 @@ for i = 1:N_p
 end
 
 %% 8. Plot results
-figure('Position', [100, 100, 900, 500]);
+%% 8. Plot results
+figure('Position', [100, 100, 1200, 550]);   % wider figure
+
 b = bar(Sensitivity);
-set(gca, 'XTick', 1:N_p, 'XTickLabel', paramNames);
+
+ax = gca;
+ax.XTick = 1:N_p;
+ax.XTickLabel = paramNames;
+ax.TickLabelInterpreter = 'none';   % important for underscores / full text
+ax.FontSize = 9;
+
 xtickangle(45);
 ylabel('Normalized Sensitivity Index');
 title('Local Sensitivity Analysis (LSA)');
 grid on;
+
+% give more room at the bottom for long labels
+ax.Position(2) = 0.22;
+ax.Position(4) = 0.68;
 
 % Add value labels on bars
 %xtips = b.XEndPoints;
