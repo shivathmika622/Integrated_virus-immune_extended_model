@@ -81,8 +81,14 @@ IRF9_mRNA_c = 0;
 Init_Cond = [V_E V_0 V_I R_cyt R_CM P_S P_NS RC_CM R_ds RIGI aRIGI MAVS aMAVS IKKe pIKKe TBK1 ...
     pTBK1 IRF3 pIRF3 IKK aIKK NFkB_IkBac pNFkBn NFkBn NFkBc IkBac IRF7 pIRF7 IFNb_mRNA IFNa_mRNA IFNl_mRNA IFN_c IFNl_c JAK RJC STAT1c CP ISGn IFNex STAT2c TYK RTC ARC IFNAR1 IFNAR2 IFNAR_d IRF9c ARC_STAT2c ARC_STAT12c STAT2c_IRF9 ISGF3c PSC_c ISGF3_CP PSC_CP NP STAT1n STAT2n PIAS PSC_n IRF9n ISGF3n PSC_NP B_u B_o_NP B_o ISGF3_PIAS STAT2n_IRF9 ISGF3_NP ISGav_mRNA ISGav ISGn_mRNA_n IRF9_mRNA_n IRF7_mRNA ISGn_mRNA_c IRF9_mRNA_c];
 %%
-load('param.mat')
-param = [param, 0.1, 0.001, 100, 2];
+load('param_HCV.mat')
+
+param.M = 500;
+param.Omega = 50;
+param.gamma_RIGI = 1;
+param.threshold = 500;
+param.n = 2;
+
 I_n = 1; I_a = 0; VC = 0;
 
 % Simulate for 120 hours
@@ -100,16 +106,22 @@ save('SteadyState_120h.mat', 'Tss', 'Yss');
 clear; close all; clc;
 
 load('SteadyState_120h.mat', 'Tss', 'Yss');
-load('param.mat')
-param = [param, 0.5, 0.001, 100, 2];
+load('param_HCV.mat')
+
+param.M = 500;
+param.Omega = 50;
+param.gamma_RIGI = 1;
+param.threshold = 500;
+param.n = 2;
+
 
 y0 = Yss(end,:);
 y0(2) = 1;           % MOI =10;  
 
-tend = 48*60;
+tend = 96*60;
 tspan = linspace(0,tend);
 
-c = [0, 1];
+
 
 var_names = {'ExtVirus', 'VirusInit', 'IntVirus', 'R_{cyt}', '(+)RNA_{CM}', 'SP', 'NSP', 'RC_CM', 'dsRNA', 'RIGI','aRIGI','MAVS','aMAVS',...
     'IKKe','pIKKe','TBK1','pTBK1', 'IRF3','pIRF3','IKK','aIKK','NFkBIkBac','pNFkBn','NFkBn','NFkBc', 'IkBac', 'IRF7', 'pIRF7', 'IFNbmRNA',...
@@ -119,45 +131,65 @@ var_names = {'ExtVirus', 'VirusInit', 'IntVirus', 'R_{cyt}', '(+)RNA_{CM}', 'SP'
     'IRF7mRNA', 'ISGnmRNA_c', 'IRF9mRNA_c'};
 
 tic
-for i = 1:size(c,2)
+%% Define only 4 required scenarios
+scenarios = [
+    0 0 0;   % Case 1: isgt=isgn=vc=0
+    1 0 0;   % Case 2: isgt=1, isgn=vc=0
+    1 1 0;   % Case 3: isgt=isgn=1, vc=0
+    1 1 1    % Case 4: isgt=isgn=vc=1
+    ];
 
-   I_n = c(i);
+tic
+for s = 1:size(scenarios,1)
 
-    for j = 1: size(c,2)
-
-        VC = c(j); 
-        
-        for k = 1:size(c,2)
-
-            I_a = c(k);
+    I_a = scenarios(s,1);
+    I_n = scenarios(s,2);
+    VC  = scenarios(s,3);
 
             [T,Y] = ode23s(@(t,y) ODEs(t, y, param, I_n, I_a, VC), tspan,y0);
             disp(1)
-            save(['HCV_48h_VC', num2str(VC), '_Ia', num2str(I_a),'_In',num2str(I_n), '.mat'], 'T', 'Y');
+            save(['HCV_96h_VC', num2str(VC), '_Ia', num2str(I_a),'_In',num2str(I_n), '.mat'], 'T', 'Y');
 
             T = T/60;
 
-            for m = [1, 70] 
+            colors = [
+                0.5 0 0.5;   % purple
+                0 0.6 0;     % green
+                0 0 1;       % blue
+                1 0 0        % red
+                ];
+
+            for m = [1, 70]
 
                 f = figure(m);
-                % f.WindowState = 'maximized';
+
                 set(f,'units','points','position',[0,0,600,400])
-                plot(T, (Y(:,m)),'LineWidth',1.5,'DisplayName',  ['isgt(' num2str(I_a) ')VC(' num2str(VC) ')isgn(' num2str(I_n) ')']);
+
+                plot(T, Y(:,m), ...
+                    'LineWidth',1.5, ...
+                    'Color', colors(s,:), ...
+                    'DisplayName', ['isgt(' num2str(I_a) ')VC(' num2str(VC) ')isgn(' num2str(I_n) ')']);
+
                 hold on
-                ylabel(var_names{1, m},'FontSize',15, 'Interpreter', 'tex')
+
+                ylabel(var_names{1,m},'FontSize',15,'Interpreter','tex')
                 xlabel('time [h]','FontSize',15,'Interpreter','tex')
-                set(gca,'FontSize',15, 'Yscale', 'log')
+
+                set(gca,'FontSize',15,'Yscale','log')
                 set(gca,'YMinorTick','off')
                 set(gca,'LineWidth',1.5)
-                set(gca, 'Color', 'none')
+                set(gca,'Color','none')
                 set(gca,'TickLabelInterpreter','Latex')
-                xlim([4 48])
-                xticks([4 8 16 24 36 48])
+
+                xlim([4 96])
+                xticks([4 8 16 24 36 48 60 72 84 96])
+
                 legend('Location','bestoutside')
-                % saveas(gcf, var_names{1,m}, 'fig')
+
             end
+            
         end 
-    end 
-end 
+     
+       
 toc
 save('FINAL_param_HCV.mat','param')
