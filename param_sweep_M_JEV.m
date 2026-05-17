@@ -38,7 +38,8 @@ case_titles = {'Case 1: No Immune [0 0 0]', 'Case 2: Immune Only [1 0 0]', ...
     'Case 3: Regulated [1 1 0]', 'Case 4: Fully Interacting [1 1 1]'};
 
 %% 3. Establish Base Steady State (RUNS EXACTLY ONCE)
-param_ss = [param, 1000]; 
+param_ss = param; 
+param_ss.M = 1000; % Add M as a field
 [~, Yss] = ode23s(@(t,y) ODEs(t, y, param_ss, 1, 0, 0), tspan_ss, Init_Cond);
 
 y0_master = Yss(end, :);
@@ -60,7 +61,8 @@ for c = 1:size(cases,1)
     fprintf('\n--- %s ---\n', case_titles{c});
 
     % Baseline Dotted Line
-    baseline_param = [param, 1e6]; 
+    baseline_param = param; 
+    baseline_param.M = 1e6;
     [T_base, Y_base] = ode23s(@(t,y) ODEs(t, y, baseline_param, I_n, I_a, VC), tspan, y0_master);
 
     fprintf('Baseline (No Limit) -> Max P_NS: %.4f nM\n', max(Y_base(:,7)));
@@ -70,7 +72,9 @@ for c = 1:size(cases,1)
 
     % Loop through limited M values
     for m = 1:length(M_vals)
-        current_param = [param, M_vals(m)]; 
+        % Inside your loop:
+        current_param = param;
+        current_param.M = M_vals(m);
         [T, Y] = ode23s(@(t,y) ODEs(t, y, current_param, I_n, I_a, VC), tspan, y0_master);
 
         fprintf('M = %g -> Max P_NS: %.4f nM\n', M_vals(m), max(Y(:,7)));
