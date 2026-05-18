@@ -29,7 +29,12 @@ hill_n = 2;
 M_limit = 1000; % <-- M Value Fixed at 1000
 
 % Parameter Array: [param(1-129), Omega(130), threshold(131), n(132), M(133)]
-param_ss = [param, default_Omega, default_threshold, hill_n, M_limit]; 
+param.Omega = default_Omega;
+param.threshold = default_threshold;
+param.n = hill_n;
+param.M = M_limit;
+
+param_ss = param;  
 tspan_ss = linspace(0, 120 * 60);
 [Tss, Yss] = ode23s(@(t, y) ODEs(t, y, param_ss, 1, 0, 0), tspan_ss, Init_Cond);
 
@@ -59,16 +64,20 @@ for c = 1:size(cases,1)
     fprintf('\n--- %s ---\n', case_titles{c});
     
     % Baseline (Omega = 0)
-    [T_base, Y_base] = ode23s(@(t,y) ODEs(t, y, [param, 0, fixed_thresh, hill_n, M_limit], I_n, I_a, VC), tspan_inf, y0_master);
+    param.Omega = 0;
+    param.threshold = fixed_thresh;
+    param.n = hill_n;
+    param.M = M_limit;
+    [T_base, Y_base] = ode23s(@(t,y) ODEs(t, y, param, I_n, I_a, VC), tspan_inf, y0_master);
     fprintf('Baseline (Omega=0) -> Max P_NS: %.4f nM\n', max(Y_base(:,7)));
-    
+
     figure(101); subplot(2, 2, c); hold on; plot(T_base/60, Y_base(:,1), 'k:', 'LineWidth', 3, 'DisplayName', 'Baseline (\Omega=0)');
     figure(102); subplot(2, 2, c); hold on; plot(T_base/60, Y_base(:,70), 'k:', 'LineWidth', 3, 'DisplayName', 'Baseline (\Omega=0)');
     figure(103); subplot(2, 2, c); hold on; plot(T_base/60, Y_base(:,63), 'k:', 'LineWidth', 3, 'DisplayName', 'Baseline (\Omega=0)');
     
     for m = 1:length(omega_vals)
-        param_sweep = [param, omega_vals(m), fixed_thresh, hill_n, M_limit]; 
-        [T, Y] = ode23s(@(t,y) ODEs(t, y, param_sweep, I_n, I_a, VC), tspan_inf, y0_master);
+        param.Omega = omega_vals(m);
+        [T, Y] = ode23s(@(t,y) ODEs(t, y, param, I_n, I_a, VC), tspan_inf, y0_master); 
         
         fprintf('Omega = %-5g        -> Max P_NS: %.4f nM\n', omega_vals(m), max(Y(:,7)));
         
@@ -111,7 +120,11 @@ for c = 1:size(cases,1)
     fprintf('\n--- %s ---\n', case_titles{c});
     
     % Baseline (Omega = 0, no silencing)
-    [T_base, Y_base] = ode23s(@(t,y) ODEs(t, y, [param, 0, 10, hill_n, M_limit], I_n, I_a, VC), tspan_inf, y0_master);
+    param.Omega = 0;
+    param.threshold = 10;
+    param.n = hill_n;
+    param.M = M_limit;
+    [T_base, Y_base] = ode23s(@(t,y) ODEs(t, y, param, I_n, I_a, VC), tspan_inf, y0_master);
     fprintf('Baseline (No Silence) -> Max P_NS: %.4f nM\n', max(Y_base(:,7)));
     
     figure(201); subplot(2, 2, c); hold on; plot(T_base/60, Y_base(:,1), 'k:', 'LineWidth', 3, 'DisplayName', 'Baseline (\Omega=0)');
@@ -119,8 +132,10 @@ for c = 1:size(cases,1)
     figure(203); subplot(2, 2, c); hold on; plot(T_base/60, Y_base(:,63), 'k:', 'LineWidth', 3, 'DisplayName', 'Baseline (\Omega=0)');
     
     for m = 1:length(thresh_vals)
-        param_sweep = [param, fixed_omega, thresh_vals(m), hill_n, M_limit]; 
-        [T, Y] = ode23s(@(t,y) ODEs(t, y, param_sweep, I_n, I_a, VC), tspan_inf, y0_master);
+        param.Omega = fixed_omega;
+        param.threshold = thresh_vals(m);
+
+        [T, Y] = ode23s(@(t,y) ODEs(t, y, param, I_n, I_a, VC), tspan_inf, y0_master);
         
         fprintf('Thresh = %-5g        -> Max P_NS: %.4f nM\n', thresh_vals(m), max(Y(:,7)));
         
