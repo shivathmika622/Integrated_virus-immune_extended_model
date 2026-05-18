@@ -21,11 +21,10 @@ Init_Cond = [V_E V_0 V_I R_cyt R_CM P_S P_NS RC_CM R_ds RIGI aRIGI MAVS aMAVS IK
 load('param_JEV.mat')
 
 % Steady state run with default parameters (gamma_RIGI = 0)
-param_base = [param, 0];
 tspan_ss = linspace(0, 120 * 60);
-
+param_base = param;
+param_base.gamma_RIGI = 0; 
 [Tss, Yss] = ode23s(@(t, y) ODEs(t, y, param_base, 1, 0, 0), tspan_ss, Init_Cond);
-
 y0_master = Yss(end,:);
 y0_master(2) = 1; % Introduce Virus Input
 tspan_inf = linspace(0, 96*60);
@@ -62,7 +61,10 @@ for c = 1:size(cases,1)
     fprintf('\n--- %s ---\n', case_titles{c});
 
     % Baseline Dotted Line (No Suppression, gamma = 0)
-    param_unlim = [param, 0];
+    param_unlim = param;
+    param_unlim.gamma_RIGI = 0;
+
+    
     [T_base, Y_base] = ode23s(@(t,y) ODEs(t, y, param_unlim, I_n, I_a, VC), tspan_inf, y0_master);
 
     fprintf('Baseline (No Suppression) -> Max P_NS: %.4f nM\n', max(Y_base(:,7)));
@@ -72,9 +74,12 @@ for c = 1:size(cases,1)
 
     % Loop through the gamma values
     for m = 1:length(gamma_vals)
-        param_sweep = [param, gamma_vals(m)];
-        [T, Y] = ode23s(@(t,y) ODEs(t, y, param_sweep, I_n, I_a, VC), tspan_inf, y0_master);
+        % Instead of: param_sweep = [param, gamma_vals(m)];
+        % Do this:
+        currentParam = param; % Assuming 'param' loaded from .mat is a struct
+        currentParam.gamma_RIGI = gamma_vals(m); 
 
+        [T, Y] = ode23s(@(t,y) ODEs(t, y, currentParam, I_n, I_a, VC), tspan_inf, y0_master);
         fprintf('Gamma_RIGI = %-5g       -> Max P_NS: %.4f nM\n', gamma_vals(m), max(Y(:,7)));
 
         legend_str = sprintf('\\gamma_{RIGI} = %.3g', gamma_vals(m));
