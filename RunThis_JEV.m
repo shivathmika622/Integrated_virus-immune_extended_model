@@ -89,7 +89,7 @@ param.gamma_RIGI = 1;
 param.threshold = 500;
 param.n = 2;
 
-I_n = 1; I_a = 0; VC = 0;
+I_n = 1; I_a = 0; VC = 0.16;
 
 % Simulate for 120 hours
 t_start_ss = 0;
@@ -120,9 +120,6 @@ y0(2) = 1;           % MOI =10;
 
 tend = 96*60;
 tspan = linspace(0,tend);
-
-
-
 var_names = {'ExtVirus', 'VirusInit', 'IntVirus', 'R_{cyt}', '(+)RNA_{CM}', 'SP', 'NSP', 'RC_CM', 'dsRNA', 'RIGI','aRIGI','MAVS','aMAVS',...
     'IKKe','pIKKe','TBK1','pTBK1', 'IRF3','pIRF3','IKK','aIKK','NFkBIkBac','pNFkBn','NFkBn','NFkBc', 'IkBac', 'IRF7', 'pIRF7', 'IFNbmRNA',...
     'IFNamRNA','IFNlmRNA', 'IFN_c', 'IFNl_c', 'JAK','RJC', 'STAT1c','CP', 'ISGn','IFNex','STAT2c','TYK','RTC','ARC', 'Rec1','Rec2',...
